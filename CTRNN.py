@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np 
 
 class CTRNN(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, dt=None):
@@ -46,3 +47,25 @@ class CTRNN(nn.Module):
         output = self.h2out(hidden_all)
 
         return output, hidden_all
+    
+# trial params
+stim_start = 1
+stim_duration = 0.5 # seconds
+delay_duration = 1.5 # seconds
+choice_start = stim_start + stim_duration + delay_duration
+choice_duration = 1 # seconds
+post_duration = 1 # seconds
+
+duration = stim_start + stim_duration + delay_duration + choice_duration + post_duration
+dt = 0.5 # seconds
+
+step_lims = torch.arange(0, duration + dt, dt)
+n_steps = int(duration / dt)
+
+class Trial():
+    def __init__(self, stimulus):
+        self.target_val = stimulus
+        self.stimulus = torch.zeros((n_steps,2))
+        self.stimulus[torch.where(torch.logical_and(step_lims>=stim_start, step_lims<stim_start+stim_duration)),stimulus] = 1
+        self.target = torch.zeros((n_steps,2))
+        self.target[np.array(np.where(np.logical_and(step_lims>=choice_start, step_lims<choice_start+choice_duration))),self.target_val] = 1
